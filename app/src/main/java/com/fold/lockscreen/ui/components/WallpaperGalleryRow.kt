@@ -199,21 +199,23 @@ private fun WallpaperThumbnailCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             val currentBmp = bitmap
-            if (currentBmp != null && !currentBmp.isRecycled) {
-                try {
-                    Image(
-                        bitmap = currentBmp.asImageBitmap(),
-                        contentDescription = item.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } catch (e: Exception) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black)
-                    )
-                }
+            val imageBitmap = remember(currentBmp) {
+                if (currentBmp != null && !currentBmp.isRecycled) {
+                    try {
+                        currentBmp.asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
+            }
+
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = item.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             } else {
                 Box(
                     modifier = Modifier
