@@ -13,7 +13,8 @@ import android.service.wallpaper.WallpaperService
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.SurfaceHolder
-import com.fold.lockscreen.canvas.*
+import com.fold.lockscreen.canvas.LifeClockRenderer
+import com.fold.lockscreen.canvas.NotificationRenderer
 import com.fold.lockscreen.data.*
 import kotlinx.coroutines.*
 import java.util.Calendar
@@ -38,10 +39,7 @@ class LockscreenWallpaperService : WallpaperService() {
         private var isCoverScreen = true
         private var isVisible = false
 
-        private val digitalClock = DigitalClockRenderer()
-        private val dotMatrixClock = DotMatrixClockRenderer()
-        private val analogClock = AnalogClockRenderer()
-        private val flipClock = FlipClockRenderer()
+        private val lifeClock = LifeClockRenderer()
         private val notificationRenderer = NotificationRenderer()
 
         private var clockBounds = RectF()
@@ -126,12 +124,7 @@ class LockscreenWallpaperService : WallpaperService() {
             tickerJob = serviceScope.launch {
                 while (isActive && isVisible) {
                     drawFrame()
-                    // If showing analog clock with smooth seconds, update faster; otherwise 1000ms
-                    val delayMs = if (currentSettings.clockStyle == ClockStyle.ANALOG && currentSettings.showSeconds) {
-                        100L
-                    } else {
-                        1000L
-                    }
+                    val delayMs = if (currentSettings.showSeconds) 100L else 1000L
                     delay(delayMs)
                 }
             }
@@ -164,8 +157,18 @@ class LockscreenWallpaperService : WallpaperService() {
         private fun renderOnCanvas(canvas: Canvas, width: Int, height: Int) {
             if (width <= 0 || height <= 0) return
 
-            // 1. Clear background (Pure AMOLED Black by default)
-            canvas.drawColor(currentSettings.backgroundColor.toInt())
+            // 1. Draw Background Wallpaper with Center-Crop
+            val wallpaperBitmap = WallpaperHelper.loadBitmap(
+                applicationContext,
+                currentSettings.selectedWallpaperPath,
+                maxOf(width, height)
+            )
+
+            if (wallpaperBitmap != null && !wallpaperBitmap.isRecycled) {
+                WallpaperHelper.drawCenterCrop(canvas, wallpaperBitmap, width.toFloat(), height.toFloat())
+            } else {
+                canvas.drawColor(Color.BLACK)
+            }
 
             val calendar = Calendar.getInstance()
             val density = resources.displayMetrics.density
@@ -190,30 +193,25 @@ class LockscreenWallpaperService : WallpaperService() {
             val notifCenterX = width * layout.notificationXPercent
             val notifCenterY = effectiveHeight * layout.notificationYPercent
 
-            // 2. Render Selected Clock Style
-            val activeRenderer: ClockRenderer = when (currentSettings.clockStyle) {
-                ClockStyle.DIGITAL_MINIMAL -> digitalClock
-                ClockStyle.DOT_MATRIX -> dotMatrixClock
-                ClockStyle.ANALOG -> analogClock
-                ClockStyle.FLIP_CLOCK -> flipClock
-            }
-
-            activeRenderer.draw(
+            // 2. Render Single "Life is to short Live It" Clock Style
+            lifeClock.draw(
                 canvas = canvas,
                 width = width,
                 height = effectiveHeight.toInt(),
                 centerX = clockCenterX,
                 centerY = clockCenterY,
                 settings = currentSettings,
-                calendar = calendar
+                calendar = calendar,
+                scaleMultiplier = layout.clockScale
             )
 
-            clockBounds = activeRenderer.getBounds(
+            clockBounds = lifeClock.getBounds(
                 width = width,
                 height = effectiveHeight.toInt(),
                 centerX = clockCenterX,
                 centerY = clockCenterY,
-                settings = currentSettings
+                settings = currentSettings,
+                scaleMultiplier = layout.clockScale
             )
 
             // 3. Render Notifications
@@ -224,7 +222,8 @@ class LockscreenWallpaperService : WallpaperService() {
                 centerX = notifCenterX,
                 centerY = notifCenterY,
                 settings = currentSettings,
-                notifications = currentNotifications
+                notifications = currentNotifications,
+                scaleMultiplier = 1.0f
             )
 
             notifBounds = notificationRenderer.getBounds()
@@ -266,7 +265,6 @@ class LockscreenWallpaperService : WallpaperService() {
                     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                     startActivity(launchIntent)
                 } else {
-                    // Fallback to default system clock or settings
                     val fallbackIntent = Intent(Intent.ACTION_MAIN).apply {
                         addCategory(Intent.CATEGORY_APP_CALENDAR)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

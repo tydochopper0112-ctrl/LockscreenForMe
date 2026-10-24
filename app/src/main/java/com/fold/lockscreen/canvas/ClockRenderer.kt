@@ -1,10 +1,7 @@
 package com.fold.lockscreen.canvas
 
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
-import android.graphics.Typeface
-import com.fold.lockscreen.data.FontStyle
 import com.fold.lockscreen.data.LockscreenSettings
 import java.util.Calendar
 
@@ -16,7 +13,8 @@ interface ClockRenderer {
         centerX: Float,
         centerY: Float,
         settings: LockscreenSettings,
-        calendar: Calendar
+        calendar: Calendar,
+        scaleMultiplier: Float = 1.0f
     )
 
     fun getBounds(
@@ -24,17 +22,7 @@ interface ClockRenderer {
         height: Int,
         centerX: Float,
         centerY: Float,
-        settings: LockscreenSettings
+        settings: LockscreenSettings,
+        scaleMultiplier: Float = 1.0f
     ): RectF
-
-    companion object {
-        fun resolveTypeface(fontStyle: FontStyle): Typeface {
-            return when (fontStyle) {
-                FontStyle.MONOSPACE -> Typeface.MONOSPACE
-                FontStyle.SANS_SERIF -> Typeface.SANS_SERIF
-                FontStyle.SERIF -> Typeface.SERIF
-                FontStyle.DOT_MATRIX -> Typeface.MONOSPACE // Dot-Matrix clock uses its own dot generator
-            }
-        }
-    }
 }

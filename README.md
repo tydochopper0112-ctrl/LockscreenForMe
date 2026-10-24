@@ -1,125 +1,77 @@
-# Lockscreen for me 📱✨
+# Lockscreen for me (v1.1.0) 📱✨
 ### Ứng dụng hình nền động & tuỳ biến màn hình khoá tối ưu chuyên biệt cho Samsung Galaxy Z Fold 7
 *(Hỗ trợ Android 10+ / minSdk 29, targetSdk 35 | Kotlin & Jetpack Compose)*
 
 ---
 
-## 🌟 Điểm nổi bật & Tính năng chính
+## 🌟 Tính năng mới nổi bật trên Phiên bản v1.1.0
 
-### 1. ⚡ Lưu trữ cài đặt & Đồng bộ thời gian thực (Jetpack DataStore)
-- Toàn bộ tuỳ chỉnh (kiểu đồng hồ, font chữ, màu sắc, toạ độ màn hình gập) được quản lý qua **Jetpack Preferences DataStore**.
-- `LockscreenWallpaperService.Engine` đăng ký lắng nghe trực tiếp thông qua **Kotlin Coroutines Flow**: Khi người dùng thay đổi bất kỳ cài đặt nào trong app (kéo thanh trượt, đổi font, đổi màu), hình nền Canvas lập tức vẽ lại tức thì mà **không cần người dùng phải đặt lại hình nền**.
+### 1. 🖼️ Kho ảnh nền có sẵn & Chọn ảnh từ thư viện máy
+- **Kho ảnh nền độc quyền tích hợp:** Đã chuyển toàn bộ ảnh nền (`BLACK.jpg`, `Don't 2.jpg`, `Don't 3.jpg`, `Split-Panel-LF.jpg`) vào `app/src/main/assets/wallpapers/`.
+- **Thanh cuộn ngang Thumbnail Gallery:** Hiển thị trực quan hình thu nhỏ của các hình nền để bạn bấm chọn tức thì.
+- **Nút chọn ảnh từ thư viện máy:** Tích hợp `ActivityResultContracts.PickVisualMedia` cho phép bạn chọn ảnh bất kỳ từ điện thoại Z Fold 7.
+- **Center-Crop thông minh:** Trong `WallpaperService.Engine`, thuật toán Center-Crop tự động căn giữa và lấp đầy cả **Cover Screen (22:9)** và **Main Screen (6:5)** của Z Fold 7 mà không làm méo hay biến dạng hình ảnh.
 
-### 2. 🕰️ Tuỳ chỉnh Đồng hồ & Font chữ Canvas
-- **4 Kiểu đồng hồ Canvas:**
-  1. **Digital Minimal:** Hiện đại, thanh lịch, tinh giản chuẩn flagship với ngày tháng tiếng Việt/quốc tế.
-  2. **Dot-Matrix:** Mô phỏng ma trận chấm LED/VFD cổ điển với các chấm phát sáng (lit dots) và chấm mờ (unlit dots).
-  3. **Analog:** Mặt đồng hồ kim AMOLED tối giản, kim giờ, kim phút, kim giây lướt mượt mà, vạch chia giờ và tâm kim tinh xảo.
-  4. **Flip Clock:** Phong cách đồng hồ lật cơ học (Split-Flap) với rãnh chia đôi bản lật, hiệu ứng bóng đổ và chuyển màu gradient.
-- **4 Kiểu Font chữ:**
-  1. `Monospace`
-  2. `Sans-Serif`
-  3. `Serif`
-  4. `Dot-Matrix` (Tích hợp bộ ký tự 5x7 ma trận tự vẽ trực tiếp trên Canvas).
-- **Thanh trượt & Tuỳ biến màu sắc:**
-  - Thanh trượt chỉnh tỷ lệ kích thước đồng hồ từ 60% đến 180%.
-  - Bảng chọn màu sắc: Màu chữ đồng hồ, màu điểm nhấn (Accent), màu nền (Mặc định chuẩn đen thuần **AMOLED #000000** giúp tiết kiệm pin tối đa cho màn hình Dynamic AMOLED 2X của Z Fold 7).
-  - Tuỳ chọn định dạng 24 giờ và bật/tắt kim giây.
+### 2. 🖐️ Khung Xem Trước Kéo-Thả Trực Quan (WYSIWYG Drag & Drop)
+- **Xóa bỏ hoàn toàn thanh trượt tọa độ:** Không còn các thanh trượt hay ô nhập số khó căn chỉnh.
+- **Khung xem trước tương tác thời gian thực:**
+  - Nút chuyển đổi nhanh giữa **Màn hình ngoài (Cover Screen 22:9)** và **Màn hình trong (Main Screen 6:5)**.
+  - **Chạm & Kéo (Drag & Drop):** Dùng 1 ngón tay chạm và di chuyển vị trí của Đồng hồ hoặc Thẻ thông báo đến bất kỳ toạ độ nào trên màn hình.
+  - **Phóng to / Thu nhỏ (Pinch-to-zoom):** Dùng 2 ngón tay kéo dãn để tùy chỉnh kích thước đồng hồ trực tiếp.
+  - **Đường lưới căn giữa tự động (Snap-to-center):** Tự động hít vào tâm dọc (50%) và tâm ngang (50%) kèm vạch hiển thị Cyan khi kéo gần tới giữa màn hình.
+  - Toạ độ được chuẩn hoá lưu trữ theo tỷ lệ phần trăm (0.0f đến 1.0f) trong Jetpack DataStore, đảm bảo độ chính xác 100% giữa khung xem trước và hình nền thực tế.
 
-### 3. 🔔 Hệ thống Thông báo (NotificationListenerService)
-- Tích hợp `LockscreenNotificationListenerService` đọc các thông báo hoạt động từ hệ thống.
-- Trong màn hình Cài đặt, có nút kiểm tra trạng thái và cấp quyền đọc thông báo (dẫn trực tiếp tới `Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS`).
-- **3 Chế độ hiển thị trên Canvas:**
-  - **Ẩn (Hidden):** Không hiển thị thông báo.
-  - **Chỉ hiện số lượng (Counter):** Hiển thị viên nang đếm số thông báo mới (ví dụ: `● 3 thông báo mới`).
-  - **Danh sách rút gọn (Compact List):** Hiển thị thẻ bo tròn tối đa 3 thông báo mới nhất kèm Tên ứng dụng (App Badge) + Tiêu đề/Nội dung rút gọn.
-
-### 4. 📐 Đa nhiệm thông minh cho Màn hình gập (Foldable Dual-Layout)
-- **Tự động nhận diện màn hình theo tỷ lệ khung hình tại `onSurfaceChanged`:**
-  - `width / height < 0.6`: Tự động kích hoạt cấu hình **Cover Screen (Màn hình ngoài)** của Z Fold 7 (tỷ lệ xấp xỉ 22:9).
-  - `width / height > 0.7`: Tự động kích hoạt cấu hình **Main Screen (Màn hình trong gập)** của Z Fold 7 (tỷ lệ xấp xỉ 6:5).
-- **Toạ độ X/Y độc lập:**
-  - Cho phép người dùng chỉnh toạ độ X và Y riêng biệt cho màn hình ngoài và màn hình trong.
-  - Có thanh trượt **Bảo vệ Taskbar Samsung One UI**: Chừa khoảng trống tuỳ chỉnh (mặc định 64dp) ở chân màn hình trong để các widget hay thanh Taskbar đa nhiệm không đè lên thông báo.
-- **Cử chỉ Chạm đúp (Double Tap):**
-  - Bắt sự kiện `onTouchEvent` với `GestureDetector.onDoubleTap`.
-  - Khi chạm đúp vào vùng đồng hồ hoặc danh sách thông báo, điện thoại rung phản hồi haptic và lập tức khởi động ứng dụng chỉ định (mặc định: Đồng hồ/Báo thức Samsung `com.sec.android.app.clockpackage`, Lịch, hoặc bất kỳ app nào người dùng chọn).
-
-### 5. 🚀 Đóng gói tự động (GitHub Actions)
-- File `.github/workflows/release.yml` cấu hình sẵn:
-  - Tự động kích hoạt khi gắn tag `v*` (ví dụ: `v1.0.0`).
-  - Tự động dựng bản build APK (`assembleRelease` & `assembleDebug`) trên môi trường Java 17.
-  - Tự động tạo GitHub Release và đính kèm file APK sẵn sàng cài đặt.
+### 3. 🕰️ Kiểu Đồng Hồ Độc Quyền "Life is to short Live It"
+- Tái tạo chính xác duy nhất mẫu đồng hồ từ file thiết kế của bạn:
+  - Chữ **"Life"**: Nét đứng của chữ **"L"** chạy dài xuyên qua tâm kim đồng hồ; cụm chữ **"ife"** mang font sans-serif hình học thanh mảnh, tinh tế.
+  - Dòng chữ phụ **"is to short"** màu trắng tinh khiết đặt ngay dưới tâm đồng hồ.
+  - Dòng chữ hành động **"Live It"** màu đỏ nổi bật (`#FF1122`), in đậm bên dưới.
+  - Kim đồng hồ chuyển động thời gian thực với kim giờ trắng, kim phút trắng, kim giây đỏ rực rỡ kèm đuôi kim dài đối xứng tạo điểm nhấn nghệ thuật ấn tượng.
+  - Tâm đồng hồ dạng vòng tròn viền kép đen - trắng tinh xảo.
 
 ---
 
-## 🏗️ Cấu trúc dự án
+## 🏗️ Cấu trúc dự án v1.1.0
 
 ```
 Lockscreen/
-├── .github/
-│   └── workflows/
-│       └── release.yml                 # CI/CD tự động build & release APK
-├── gradle/
-│   └── libs.versions.toml              # Version Catalog quản lý thư viện
+├── .github/workflows/
+│   └── release.yml                             # Tự động đóng gói APK & tạo GitHub Release
 ├── app/
-│   ├── build.gradle.kts                # Cấu hình Android SDK 35, MinSdk 29, Compose
+│   ├── build.gradle.kts                        # minSdk 29, targetSdk 35, versionCode 2, versionName 1.1.0
 │   └── src/main/
-│       ├── AndroidManifest.xml         # Khai báo WallpaperService, NotificationListener
-│       ├── res/
-│       │   ├── xml/lockscreen_wallpaper.xml
-│       │   └── values/{strings,colors,themes}.xml
+│       ├── assets/
+│       │   ├── wallpapers/                     # Kho ảnh nền tích hợp
+│       │   └── clock/                          # Ảnh mẫu đồng hồ tham chiếu
+│       ├── AndroidManifest.xml                 # Khai báo WallpaperService & NotificationListenerService
 │       └── java/com/fold/lockscreen/
-│           ├── LockscreenApp.kt        # Application class khởi tạo singleton
+│           ├── LockscreenApp.kt                # Application class
 │           ├── data/
-│           │   ├── LockscreenPreferences.kt # Data models & cấu hình toạ độ
-│           │   ├── PreferencesManager.kt    # Jetpack DataStore Flow quản lý reactive prefs
-│           │   └── NotificationModel.kt     # Repository thông báo
+│           │   ├── LockscreenPreferences.kt    # Cấu hình toạ độ & tỷ lệ
+│           │   ├── PreferencesManager.kt       # Quản lý DataStore thời gian thực
+│           │   ├── NotificationModel.kt        # Repository thông báo
+│           │   └── WallpaperHelper.kt          # Xử lý Center-Crop & nạp ảnh nền
 │           ├── service/
-│           │   ├── LockscreenWallpaperService.kt # Engine vẽ Canvas & xử lý gập mở
-│           │   └── LockscreenNotificationListenerService.kt # Bridge đọc thông báo
+│           │   ├── LockscreenWallpaperService.kt           # Engine hình nền Canvas Z Fold 7
+│           │   └── LockscreenNotificationListenerService.kt# Cầu nối đọc thông báo
 │           ├── canvas/
-│           │   ├── ClockRenderer.kt         # Interface vẽ đồng hồ & tính bounds
-│           │   ├── DigitalClockRenderer.kt  # Kiểu Digital Minimal
-│           │   ├── DotMatrixClockRenderer.kt# Kiểu Dot-Matrix retro
-│           │   ├── DotMatrixFont.kt         # Bộ ký tự 5x7 dot matrix
-│           │   ├── AnalogClockRenderer.kt   # Kiểu đồng hồ kim AMOLED
-│           │   ├── FlipClockRenderer.kt     # Kiểu đồng hồ lật Split-Flap
-│           │   └── NotificationRenderer.kt  # Vẽ thẻ thông báo & counter
+│           │   ├── ClockRenderer.kt            # Interface vẽ đồng hồ
+│           │   ├── LifeClockRenderer.kt        # Đồng hồ "Life is to short Live It"
+│           │   └── NotificationRenderer.kt     # Hiển thị thẻ thông báo & Counter
 │           └── ui/
-│               ├── MainActivity.kt          # Host Compose UI & kiểm tra quyền
-│               ├── theme/                   # Material 3 AMOLED Dark theme
+│               ├── MainActivity.kt             # Activity chính
 │               ├── components/
-│               │   ├── ColorPickerRow.kt    # Chọn màu sắc preset
-│               │   └── PreviewCanvas.kt     # Giả lập màn hình ngoài & màn hình trong
+│               │   ├── InteractiveWysiwygPreview.kt # Khung kéo thả trực quan WYSIWYG
+│               │   └── WallpaperGalleryRow.kt       # Thư viện cuộn chọn ảnh nền
 │               └── screens/
-│                   ├── MainSettingsScreen.kt# Giao diện chính 4 Tabs + nút Đặt hình nền
-│                   ├── ClockSettingsTab.kt  # Cài đặt đồng hồ, font, kích thước, màu
-│                   ├── FoldPositioningTab.kt# Cài đặt toạ độ X/Y Cover vs Main Screen
-│                   └── NotificationSettingsTab.kt # Quản lý quyền & chế độ thông báo
+│                   └── MainSettingsScreen.kt   # Giao diện chính đồng nhất
 ```
 
 ---
 
-## 🛠️ Hướng dẫn Biên dịch và Sử dụng
-
-### 1. Build bằng Android Studio hoặc Gradle
-```bash
-# Cấp quyền thực thi cho gradlew (trên Linux/macOS)
-chmod +x gradlew
-
-# Build bản phát hành APK
-./gradlew assembleRelease
-
-# File APK tạo ra tại:
-app/build/outputs/apk/release/app-release.apk
-```
-
-### 2. Kích hoạt Hình nền động trên Samsung Galaxy Z Fold 7
-1. Cài đặt file APK vào máy.
-2. Mở ứng dụng **Lockscreen for me**.
-3. Cấp quyền đọc thông báo tại tab **Thông báo**.
-4. Chọn kiểu đồng hồ, font chữ và toạ độ mong muốn.
-5. Nhấn nút **"Đặt làm Hình nền Lockscreen"** ở góc dưới màn hình.
-6. Chọn áp dụng cho **Màn hình khoá** (hoặc cả Màn hình khoá và Màn hình chính).
-7. Thử gập hoặc mở máy: Hình nền sẽ tự động nhận diện tỷ lệ khung hình và hiển thị đúng bố cục bạn đã cấu hình cho Cover Screen và Main Screen!
+## 🛠️ Hướng dẫn Sử dụng
+1. Mở ứng dụng **Lockscreen for me**.
+2. Chọn hình nền trong **Kho ảnh nền** hoặc bấm **"Chọn ảnh từ máy"** để tải ảnh yêu thích từ điện thoại.
+3. Chạm và kéo đồng hồ hoặc thông báo trực tiếp trên **Khung xem trước**. Dùng 2 ngón tay thu phóng kích thước tùy thích.
+4. Chuyển đổi giữa tab **Màn ngoài (Cover)** và **Màn trong (Main)** để căn chỉnh độc lập cho từng màn hình gập của Z Fold 7.
+5. Bấm **"Đặt làm Hình nền Lockscreen"** để áp dụng.
