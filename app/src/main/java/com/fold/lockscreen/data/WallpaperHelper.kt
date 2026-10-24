@@ -3,6 +3,7 @@ package com.fold.lockscreen.data
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
+import android.util.LruCache
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -40,13 +41,24 @@ object WallpaperHelper {
         )
     )
 
-    private var cachedPath: String? = null
-    private var cachedBitmap: Bitmap? = null
+    // Multi-entry LRU memory cache (up to 32MB) to hold wallpapers and thumbnails safely
+    private val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
+    private val cacheSize = (maxMemory / 8).coerceAtLeast(16 * 1024) // in KB
 
-    @Synchronized
+    private val memoryCache = object : LruCache<String, Bitmap>(cacheSize) {
+        override fun sizeOf(key: String, bitmap: Bitmap): Int {
+            return if (!bitmap.isRecycled) bitmap.byteCount / 1024 else 1
+        }
+    }
+
     fun loadBitmap(context: Context, path: String, targetMaxDim: Int = 2048): Bitmap? {
-        if (path == cachedPath && cachedBitmap != null && !cachedBitmap!!.isRecycled) {
-            return cachedBitmap
+        val cacheKey = "$path-$targetMaxDim"
+
+        synchronized(memoryCache) {
+            val cached = memoryCache.get(cacheKey)
+            if (cached != null && !cached.isRecycled) {
+                return cached
+            }
         }
 
         try {
@@ -64,21 +76,20 @@ object WallpaperHelper {
 
             if (inputStream == null) return null
 
-            // Decode with bounds to avoid huge memory footprint
+            // Decode dimensions first
             val options = BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
-            // Need mark/reset support or recreate stream
             inputStream.close()
 
-            // Re-open stream for sizing
-            val sizingStream = if (path.startsWith("assets:")) {
+            // Re-open for bounds measuring
+            val boundsStream = if (path.startsWith("assets:")) {
                 context.assets.open(path.removePrefix("assets:"))
             } else {
                 File(path.removePrefix("file:")).inputStream()
             }
-            BitmapFactory.decodeStream(sizingStream, null, options)
-            sizingStream.close()
+            BitmapFactory.decodeStream(boundsStream, null, options)
+            boundsStream.close()
 
             var sampleSize = 1
             var w = options.outWidth
@@ -103,12 +114,13 @@ object WallpaperHelper {
             val bitmap = BitmapFactory.decodeStream(decodeStream, null, decodeOptions)
             decodeStream.close()
 
-            if (bitmap != null) {
-                cachedBitmap?.recycle()
-                cachedBitmap = bitmap
-                cachedPath = path
+            if (bitmap != null && !bitmap.isRecycled) {
+                synchronized(memoryCache) {
+                    memoryCache.put(cacheKey, bitmap)
+                }
+                return bitmap
             }
-            return bitmap
+            return null
         } catch (e: Exception) {
             e.printStackTrace()
             return null
@@ -117,15 +129,16 @@ object WallpaperHelper {
 
     /**
      * Draws the bitmap with Center-Crop mode so that it fills the given canvas dimensions
-     * without distortion, clipping overflow equally from edges.
+     * without distortion. Strictly guards against recycled bitmaps.
      */
     fun drawCenterCrop(
         canvas: Canvas,
-        bitmap: Bitmap,
+        bitmap: Bitmap?,
         canvasWidth: Float,
         canvasHeight: Float,
         paint: Paint? = null
     ) {
+        if (bitmap == null || bitmap.isRecycled) return
         if (canvasWidth <= 0 || canvasHeight <= 0) return
         val bW = bitmap.width.toFloat()
         val bH = bitmap.height.toFloat()
@@ -138,7 +151,13 @@ object WallpaperHelper {
         val top = (canvasHeight - scaledH) / 2f
 
         val dstRect = RectF(left, top, left + scaledW, top + scaledH)
-        canvas.drawBitmap(bitmap, null, dstRect, paint)
+        try {
+            if (!bitmap.isRecycled) {
+                canvas.drawBitmap(bitmap, null, dstRect, paint)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**
@@ -153,7 +172,7 @@ object WallpaperHelper {
                     input.copyTo(output)
                 }
             }
-            // Clean up any older custom wallpapers
+            // Clean up older custom wallpapers
             context.filesDir.listFiles()?.forEach { file ->
                 if (file.name.startsWith("custom_wallpaper_") && file.absolutePath != destFile.absolutePath) {
                     file.delete()
