@@ -9,19 +9,28 @@ import androidx.compose.runtime.getValue
 import com.fold.lockscreen.LockscreenApp
 import com.fold.lockscreen.data.LockscreenSettings
 import com.fold.lockscreen.data.NotificationRepository
+import com.fold.lockscreen.data.PreferencesManager
 import com.fold.lockscreen.service.LockscreenNotificationListenerService
 import com.fold.lockscreen.ui.screens.MainSettingsScreen
 import com.fold.lockscreen.ui.theme.LockscreenTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val preferencesManager by lazy {
-        (application as LockscreenApp).preferencesManager
+    private val preferencesManager: PreferencesManager by lazy {
+        try {
+            (application as LockscreenApp).preferencesManager
+        } catch (e: Exception) {
+            PreferencesManager(applicationContext)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        try {
+            enableEdgeToEdge()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         setContent {
             LockscreenTheme {
@@ -41,7 +50,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val granted = LockscreenNotificationListenerService.isPermissionGranted(this)
-        NotificationRepository.updatePermissionStatus(granted)
+        try {
+            val granted = LockscreenNotificationListenerService.isPermissionGranted(this)
+            NotificationRepository.updatePermissionStatus(granted)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

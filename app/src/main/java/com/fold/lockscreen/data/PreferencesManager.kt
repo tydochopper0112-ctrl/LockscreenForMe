@@ -7,9 +7,12 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "lockscreen_prefs")
+// Top-level singleton delegate bound strictly to applicationContext
+private val Context.appPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(name = "lockscreen_prefs")
+
+val Context.dataStore: DataStore<Preferences>
+    get() = applicationContext.appPreferencesDataStore
 
 class PreferencesManager(private val context: Context) {
 
@@ -38,11 +41,9 @@ class PreferencesManager(private val context: Context) {
 
     val settingsFlow: Flow<LockscreenSettings> = context.dataStore.data
         .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
+            // Prevent any crash during DataStore read
+            exception.printStackTrace()
+            emit(emptyPreferences())
         }
         .map { preferences ->
             val wallpaperPath = preferences[PreferencesKeys.SELECTED_WALLPAPER_PATH] ?: "assets:wallpapers/BLACK.jpg"
@@ -78,54 +79,72 @@ class PreferencesManager(private val context: Context) {
         }
 
     suspend fun updateWallpaperPath(path: String) {
-        context.dataStore.edit { it[PreferencesKeys.SELECTED_WALLPAPER_PATH] = path }
+        runCatching {
+            context.dataStore.edit { it[PreferencesKeys.SELECTED_WALLPAPER_PATH] = path }
+        }
     }
 
     suspend fun updateCoverClock(x: Float, y: Float, scale: Float) {
-        context.dataStore.edit {
-            it[PreferencesKeys.COVER_CLOCK_X] = x
-            it[PreferencesKeys.COVER_CLOCK_Y] = y
-            it[PreferencesKeys.COVER_CLOCK_SCALE] = scale
+        runCatching {
+            context.dataStore.edit {
+                it[PreferencesKeys.COVER_CLOCK_X] = x
+                it[PreferencesKeys.COVER_CLOCK_Y] = y
+                it[PreferencesKeys.COVER_CLOCK_SCALE] = scale
+            }
         }
     }
 
     suspend fun updateCoverNotification(x: Float, y: Float) {
-        context.dataStore.edit {
-            it[PreferencesKeys.COVER_NOTIF_X] = x
-            it[PreferencesKeys.COVER_NOTIF_Y] = y
+        runCatching {
+            context.dataStore.edit {
+                it[PreferencesKeys.COVER_NOTIF_X] = x
+                it[PreferencesKeys.COVER_NOTIF_Y] = y
+            }
         }
     }
 
     suspend fun updateMainClock(x: Float, y: Float, scale: Float) {
-        context.dataStore.edit {
-            it[PreferencesKeys.MAIN_CLOCK_X] = x
-            it[PreferencesKeys.MAIN_CLOCK_Y] = y
-            it[PreferencesKeys.MAIN_CLOCK_SCALE] = scale
+        runCatching {
+            context.dataStore.edit {
+                it[PreferencesKeys.MAIN_CLOCK_X] = x
+                it[PreferencesKeys.MAIN_CLOCK_Y] = y
+                it[PreferencesKeys.MAIN_CLOCK_SCALE] = scale
+            }
         }
     }
 
     suspend fun updateMainNotification(x: Float, y: Float) {
-        context.dataStore.edit {
-            it[PreferencesKeys.MAIN_NOTIF_X] = x
-            it[PreferencesKeys.MAIN_NOTIF_Y] = y
+        runCatching {
+            context.dataStore.edit {
+                it[PreferencesKeys.MAIN_NOTIF_X] = x
+                it[PreferencesKeys.MAIN_NOTIF_Y] = y
+            }
         }
     }
 
     suspend fun updateMainTaskbarPadding(paddingDp: Int) {
-        context.dataStore.edit {
-            it[PreferencesKeys.MAIN_TASKBAR_PADDING] = paddingDp
+        runCatching {
+            context.dataStore.edit {
+                it[PreferencesKeys.MAIN_TASKBAR_PADDING] = paddingDp
+            }
         }
     }
 
     suspend fun updateNotificationMode(mode: NotificationDisplayMode) {
-        context.dataStore.edit { it[PreferencesKeys.NOTIFICATION_MODE] = mode.name }
+        runCatching {
+            context.dataStore.edit { it[PreferencesKeys.NOTIFICATION_MODE] = mode.name }
+        }
     }
 
     suspend fun updateDoubleTapPackage(pkg: String) {
-        context.dataStore.edit { it[PreferencesKeys.DOUBLE_TAP_PACKAGE] = pkg }
+        runCatching {
+            context.dataStore.edit { it[PreferencesKeys.DOUBLE_TAP_PACKAGE] = pkg }
+        }
     }
 
     suspend fun updateShowSeconds(show: Boolean) {
-        context.dataStore.edit { it[PreferencesKeys.SHOW_SECONDS] = show }
+        runCatching {
+            context.dataStore.edit { it[PreferencesKeys.SHOW_SECONDS] = show }
+        }
     }
 }

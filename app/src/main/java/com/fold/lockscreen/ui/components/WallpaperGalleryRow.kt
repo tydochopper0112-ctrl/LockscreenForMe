@@ -106,9 +106,13 @@ fun WallpaperGalleryRow(
                         .height(130.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .clickable {
-                            pickMediaLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
+                            try {
+                                pickMediaLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         },
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = DarkSurface),

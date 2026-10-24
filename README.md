@@ -1,77 +1,39 @@
-# Lockscreen for me (v1.1.0) 📱✨
+# Lockscreen for me (v1.1.2) 📱✨
 ### Ứng dụng hình nền động & tuỳ biến màn hình khoá tối ưu chuyên biệt cho Samsung Galaxy Z Fold 7
 *(Hỗ trợ Android 10+ / minSdk 29, targetSdk 35 | Kotlin & Jetpack Compose)*
 
 ---
 
-## 🌟 Tính năng mới nổi bật trên Phiên bản v1.1.0
+## 🌟 Tính năng & Cải tiến trên Phiên bản v1.1.2
 
-### 1. 🖼️ Kho ảnh nền có sẵn & Chọn ảnh từ thư viện máy
-- **Kho ảnh nền độc quyền tích hợp:** Đã chuyển toàn bộ ảnh nền (`BLACK.jpg`, `Don't 2.jpg`, `Don't 3.jpg`, `Split-Panel-LF.jpg`) vào `app/src/main/assets/wallpapers/`.
-- **Thanh cuộn ngang Thumbnail Gallery:** Hiển thị trực quan hình thu nhỏ của các hình nền để bạn bấm chọn tức thì.
-- **Nút chọn ảnh từ thư viện máy:** Tích hợp `ActivityResultContracts.PickVisualMedia` cho phép bạn chọn ảnh bất kỳ từ điện thoại Z Fold 7.
-- **Center-Crop thông minh:** Trong `WallpaperService.Engine`, thuật toán Center-Crop tự động căn giữa và lấp đầy cả **Cover Screen (22:9)** và **Main Screen (6:5)** của Z Fold 7 mà không làm méo hay biến dạng hình ảnh.
+### 1. 🛡️ Khắc phục triệt để lỗi Crash khi khởi động (Zero-Crash Architecture)
+- **Xóa bỏ thuộc tính XML lỗi:** Đã gỡ bỏ `android:dataExtractionRules` trỏ nhầm sang XML Wallpaper trong `AndroidManifest.xml` (nguyên nhân chính khiến hệ thống Android 12+ / Z Fold 7 văng ứng dụng ngay khi chạm biểu tượng).
+- **Chuẩn hóa Theme Material:** Chuyển `themes.xml` sang chuẩn `android:Theme.Material.NoActionBar` tương thích 100% với `ComponentActivity` của Jetpack Compose và cơ chế Edge-to-Edge của Android 15.
+- **Top-level Singleton DataStore:** Cố định `Context.dataStore` duy nhất ở cấp độ `applicationContext`, triệt tiêu hoàn toàn ngoại lệ `IllegalStateException: Multiple DataStores active`.
+- **Tắt R8 Code Shrinking:** Đảm bảo `isMinifyEnabled = false` và `isShrinkResources = false` trong `app/build.gradle.kts` để không bị xóa nhầm class.
+- **Font chữ hệ thống an toàn 100%:** Sử dụng toàn bộ `Typeface.SANS_SERIF`, `FontFamily.SansSerif` và tự vẽ bằng Canvas để không bao giờ bị `Resources$NotFoundException`.
 
-### 2. 🖐️ Khung Xem Trước Kéo-Thả Trực Quan (WYSIWYG Drag & Drop)
-- **Xóa bỏ hoàn toàn thanh trượt tọa độ:** Không còn các thanh trượt hay ô nhập số khó căn chỉnh.
-- **Khung xem trước tương tác thời gian thực:**
-  - Nút chuyển đổi nhanh giữa **Màn hình ngoài (Cover Screen 22:9)** và **Màn hình trong (Main Screen 6:5)**.
-  - **Chạm & Kéo (Drag & Drop):** Dùng 1 ngón tay chạm và di chuyển vị trí của Đồng hồ hoặc Thẻ thông báo đến bất kỳ toạ độ nào trên màn hình.
-  - **Phóng to / Thu nhỏ (Pinch-to-zoom):** Dùng 2 ngón tay kéo dãn để tùy chỉnh kích thước đồng hồ trực tiếp.
-  - **Đường lưới căn giữa tự động (Snap-to-center):** Tự động hít vào tâm dọc (50%) và tâm ngang (50%) kèm vạch hiển thị Cyan khi kéo gần tới giữa màn hình.
-  - Toạ độ được chuẩn hoá lưu trữ theo tỷ lệ phần trăm (0.0f đến 1.0f) trong Jetpack DataStore, đảm bảo độ chính xác 100% giữa khung xem trước và hình nền thực tế.
+### 2. 🚨 Màn hình Báo cáo Sự cố Toàn cục (Global Crash Screen)
+- Tích hợp `Thread.setDefaultUncaughtExceptionHandler` chạy trên tiến trình riêng `:crash`.
+- Nếu có bất kỳ lỗi đột ngột nào xảy ra, ứng dụng sẽ không bị văng mà tự động mở màn hình **Crash Handler**:
+  - Hiển thị chi tiết lỗi, dòng code gây lỗi và toàn bộ **Stack Trace**.
+  - Nút **"Sao chép lỗi"** để bạn dễ dàng gửi báo cáo.
+  - Nút **"Khởi động lại"** giúp mở lại ứng dụng tức thì.
 
-### 3. 🕰️ Kiểu Đồng Hồ Độc Quyền "Life is to short Live It"
-- Tái tạo chính xác duy nhất mẫu đồng hồ từ file thiết kế của bạn:
-  - Chữ **"Life"**: Nét đứng của chữ **"L"** chạy dài xuyên qua tâm kim đồng hồ; cụm chữ **"ife"** mang font sans-serif hình học thanh mảnh, tinh tế.
-  - Dòng chữ phụ **"is to short"** màu trắng tinh khiết đặt ngay dưới tâm đồng hồ.
-  - Dòng chữ hành động **"Live It"** màu đỏ nổi bật (`#FF1122`), in đậm bên dưới.
-  - Kim đồng hồ chuyển động thời gian thực với kim giờ trắng, kim phút trắng, kim giây đỏ rực rỡ kèm đuôi kim dài đối xứng tạo điểm nhấn nghệ thuật ấn tượng.
-  - Tâm đồng hồ dạng vòng tròn viền kép đen - trắng tinh xảo.
+### 3. 🖼️ Kho ảnh nền có sẵn & Chọn ảnh từ máy (Center-Crop)
+- **Kho ảnh nền độc quyền tích hợp:** Gồm `BLACK.jpg`, `Don't 2.jpg`, `Don't 3.jpg`, `Split-Panel-LF.jpg`.
+- **Thanh cuộn ngang Thumbnail Gallery:** Chọn hình nền trực tiếp bằng một chạm.
+- **Chọn ảnh từ thư viện máy:** Hỗ trợ `PickVisualMedia` để chọn ảnh từ điện thoại Z Fold 7.
+- **Center-Crop:** Tự động căn giữa, lấp đầy cả màn hình ngoài (22:9) và màn hình trong (6:5) mà không méo ảnh.
 
----
+### 4. 🖐️ Khung Xem Trước Kéo-Thả Trực Quan (WYSIWYG Drag & Drop)
+- Chạm & Kéo vị trí Đồng hồ hoặc Thông báo.
+- Dùng 2 ngón tay phóng to / thu nhỏ trực tiếp (Pinch-to-zoom).
+- Tự động hít vào tâm màn hình (Snap-to-center guidelines 50%).
 
-## 🏗️ Cấu trúc dự án v1.1.0
-
-```
-Lockscreen/
-├── .github/workflows/
-│   └── release.yml                             # Tự động đóng gói APK & tạo GitHub Release
-├── app/
-│   ├── build.gradle.kts                        # minSdk 29, targetSdk 35, versionCode 2, versionName 1.1.0
-│   └── src/main/
-│       ├── assets/
-│       │   ├── wallpapers/                     # Kho ảnh nền tích hợp
-│       │   └── clock/                          # Ảnh mẫu đồng hồ tham chiếu
-│       ├── AndroidManifest.xml                 # Khai báo WallpaperService & NotificationListenerService
-│       └── java/com/fold/lockscreen/
-│           ├── LockscreenApp.kt                # Application class
-│           ├── data/
-│           │   ├── LockscreenPreferences.kt    # Cấu hình toạ độ & tỷ lệ
-│           │   ├── PreferencesManager.kt       # Quản lý DataStore thời gian thực
-│           │   ├── NotificationModel.kt        # Repository thông báo
-│           │   └── WallpaperHelper.kt          # Xử lý Center-Crop & nạp ảnh nền
-│           ├── service/
-│           │   ├── LockscreenWallpaperService.kt           # Engine hình nền Canvas Z Fold 7
-│           │   └── LockscreenNotificationListenerService.kt# Cầu nối đọc thông báo
-│           ├── canvas/
-│           │   ├── ClockRenderer.kt            # Interface vẽ đồng hồ
-│           │   ├── LifeClockRenderer.kt        # Đồng hồ "Life is to short Live It"
-│           │   └── NotificationRenderer.kt     # Hiển thị thẻ thông báo & Counter
-│           └── ui/
-│               ├── MainActivity.kt             # Activity chính
-│               ├── components/
-│               │   ├── InteractiveWysiwygPreview.kt # Khung kéo thả trực quan WYSIWYG
-│               │   └── WallpaperGalleryRow.kt       # Thư viện cuộn chọn ảnh nền
-│               └── screens/
-│                   └── MainSettingsScreen.kt   # Giao diện chính đồng nhất
-```
-
----
-
-## 🛠️ Hướng dẫn Sử dụng
-1. Mở ứng dụng **Lockscreen for me**.
-2. Chọn hình nền trong **Kho ảnh nền** hoặc bấm **"Chọn ảnh từ máy"** để tải ảnh yêu thích từ điện thoại.
-3. Chạm và kéo đồng hồ hoặc thông báo trực tiếp trên **Khung xem trước**. Dùng 2 ngón tay thu phóng kích thước tùy thích.
-4. Chuyển đổi giữa tab **Màn ngoài (Cover)** và **Màn trong (Main)** để căn chỉnh độc lập cho từng màn hình gập của Z Fold 7.
-5. Bấm **"Đặt làm Hình nền Lockscreen"** để áp dụng.
+### 5. 🕰️ Kiểu Đồng Hồ Độc Quyền "Life is to short Live It"
+- Tái tạo chính xác duy nhất mẫu đồng hồ nghệ thuật:
+  - Nét đứng của chữ **"L"** chạy dài xuyên qua tâm kim.
+  - Chữ **"ife"** thanh mảnh, tinh tế.
+  - Phụ đề **"is to short"** trắng sáng và hành động **"Live It"** đỏ rực rỡ.
+  - Kim giờ, phút, giây chuyển động thời gian thực.

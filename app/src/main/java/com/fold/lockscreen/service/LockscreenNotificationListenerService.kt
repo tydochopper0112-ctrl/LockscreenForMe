@@ -4,11 +4,11 @@ import android.app.Notification
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.text.TextUtils
+import androidx.core.app.NotificationManagerCompat
 import com.fold.lockscreen.data.NotificationItem
 import com.fold.lockscreen.data.NotificationRepository
 
@@ -16,29 +16,45 @@ class LockscreenNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        NotificationRepository.updatePermissionStatus(true)
-        refreshActiveNotifications()
+        try {
+            NotificationRepository.updatePermissionStatus(true)
+            refreshActiveNotifications()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        NotificationRepository.updatePermissionStatus(false)
+        try {
+            NotificationRepository.updatePermissionStatus(false)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
-        sbn?.let {
-            if (shouldIncludeNotification(it)) {
-                val item = extractNotificationItem(it)
-                NotificationRepository.addOrUpdateNotification(item)
+        try {
+            sbn?.let {
+                if (shouldIncludeNotification(it)) {
+                    val item = extractNotificationItem(it)
+                    NotificationRepository.addOrUpdateNotification(item)
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         super.onNotificationRemoved(sbn)
-        sbn?.let {
-            NotificationRepository.removeNotification(it.key)
+        try {
+            sbn?.let {
+                NotificationRepository.removeNotification(it.key)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -56,16 +72,18 @@ class LockscreenNotificationListenerService : NotificationListenerService() {
     }
 
     private fun shouldIncludeNotification(sbn: StatusBarNotification): Boolean {
-        // Filter out ongoing background notifications (e.g. download services, ongoing calls) if preferred
-        val notification = sbn.notification ?: return false
-        val isOngoing = (notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
-        if (isOngoing) return false
+        return try {
+            val notification = sbn.notification ?: return false
+            val isOngoing = (notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
+            if (isOngoing) return false
 
-        // Filter system systemui status bar noise
-        val pkg = sbn.packageName
-        if (pkg == "android" || pkg == "com.android.systemui") return false
+            val pkg = sbn.packageName
+            if (pkg == "android" || pkg == "com.android.systemui") return false
 
-        return true
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun extractNotificationItem(sbn: StatusBarNotification): NotificationItem {
@@ -95,21 +113,29 @@ class LockscreenNotificationListenerService : NotificationListenerService() {
 
     companion object {
         fun isPermissionGranted(context: Context): Boolean {
-            val pkgName = context.packageName
-            val flat = Settings.Secure.getString(
-                context.contentResolver,
-                "enabled_notification_listeners"
-            )
-            if (!TextUtils.isEmpty(flat)) {
-                val names = flat.split(":").toTypedArray()
-                for (name in names) {
-                    val cn = ComponentName.unflattenFromString(name)
-                    if (cn != null && TextUtils.equals(pkgName, cn.packageName)) {
-                        return true
+            return try {
+                NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+            } catch (e: Exception) {
+                try {
+                    val pkgName = context.packageName
+                    val flat = Settings.Secure.getString(
+                        context.contentResolver,
+                        "enabled_notification_listeners"
+                    )
+                    if (!TextUtils.isEmpty(flat)) {
+                        val names = flat.split(":").toTypedArray()
+                        for (name in names) {
+                            val cn = ComponentName.unflattenFromString(name)
+                            if (cn != null && TextUtils.equals(pkgName, cn.packageName)) {
+                                return true
+                            }
+                        }
                     }
+                    false
+                } catch (ex: Exception) {
+                    false
                 }
             }
-            return false
         }
     }
 }

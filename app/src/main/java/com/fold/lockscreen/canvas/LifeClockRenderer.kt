@@ -27,14 +27,14 @@ class LifeClockRenderer : ClockRenderer {
 
     private val ifePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
-        typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
+        typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         letterSpacing = 0.02f
     }
 
     private val isToShortPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
-        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
         letterSpacing = 0.06f
     }
 

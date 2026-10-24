@@ -31,10 +31,10 @@ fun LockscreenTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as? Activity)?.window ?: return@SideEffect
-            window.statusBarColor = PureBlack.toArgb()
-            window.navigationBarColor = PureBlack.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            runCatching {
+                val window = (view.context as? Activity)?.window ?: return@SideEffect
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            }
         }
     }
 

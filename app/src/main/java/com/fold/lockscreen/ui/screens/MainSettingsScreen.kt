@@ -75,7 +75,7 @@ fun MainSettingsScreen(
                                 color = CyanAccent
                             ) {
                                 Text(
-                                    text = "v1.1.1",
+                                    text = "v1.1.2",
                                     color = Color.Black,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
@@ -225,10 +225,14 @@ fun MainSettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = {
-                                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                try {
+                                    val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
                                 }
-                                context.startActivity(intent)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFFFAB00),
