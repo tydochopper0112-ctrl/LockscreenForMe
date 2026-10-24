@@ -76,28 +76,28 @@ class WysiwygInteractiveView(context: Context) : View(context) {
     private var isSnappedY = false
 
     private val guidelinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.CYAN
+        color = android.graphics.Color.CYAN
         style = Paint.Style.STROKE
         strokeWidth = 2.5f
         pathEffect = DashPathEffect(floatArrayOf(12f, 8f), 0f)
     }
 
     private val snapTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.CYAN
+        color = android.graphics.Color.CYAN
         textSize = 24f
         typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
         textAlign = Paint.Align.CENTER
     }
 
     private val selectionBoxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(140, 0, 229, 255)
+        color = android.graphics.Color.argb(140, 0, 229, 255)
         style = Paint.Style.STROKE
         strokeWidth = 2f
         pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
     }
 
     private val taskbarGuidePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(80, 255, 255, 255)
+        color = android.graphics.Color.argb(80, 255, 255, 255)
         style = Paint.Style.FILL
     }
 
@@ -353,7 +353,7 @@ fun InteractiveWysiwygPreview(
                 shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = CyanAccent,
-                    activeContentColor = android.graphics.Color.BLACK.let { Color.Black },
+                    activeContentColor = Color.Black,
                     inactiveContainerColor = DarkSurfaceVariant,
                     inactiveContentColor = PureWhite
                 )

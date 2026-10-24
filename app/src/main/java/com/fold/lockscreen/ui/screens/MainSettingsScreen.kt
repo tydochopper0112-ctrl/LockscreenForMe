@@ -75,7 +75,7 @@ fun MainSettingsScreen(
                                 color = CyanAccent
                             ) {
                                 Text(
-                                    text = "v1.1.0",
+                                    text = "v1.1.1",
                                     color = Color.Black,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
